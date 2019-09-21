@@ -4,9 +4,10 @@ convert Mutable Instruments .wav update file back into .bin file
 
 usage:
 
-1) clone directly into Mutable Instruments "eurorack" repository:
+1) clone directly into Mutable Instruments "eurorack" repository (unwave depends on some files from there):
 	
 	cd eurorack
+	
 	git clone https://github.com/av500/unwave.git
 	
 2) build with make, needs libsndfile
