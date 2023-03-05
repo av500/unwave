@@ -21,19 +21,23 @@ const double kBitRate        = 12000.0;
 PacketDecoder decoder;
 Demodulator demodulator;
 
-void decode_mono(SNDFILE *fin, int fout);
+void decode_mono(SNDFILE *fin, int fout, int scramble);
 
 int main(int argc, char **argv)
 {
-	if (argc < 3) {
-		printf("unwave <infile.wav> <outfile.bin>\n");
+	if (argc < 4) {
+		printf("unwave <scramble> <infile.wav> <outfile.bin>\n");
+		printf("        ^ = 1 for Plaits, Stages, Tides2\n");
+		printf("        ^ = 0 all other modules...\n");
 		return -1;
 	}
 
 	SF_INFO info;
 	memset(&info, 0, sizeof(SF_INFO));
 
-	SNDFILE *fh = sf_open(argv[1], SFM_READ, &info);
+	int scramble = atoi(argv[1]);
+
+	SNDFILE *fh = sf_open(argv[2], SFM_READ, &info);
 	if (!fh) {
 		printf("ERROR: cannot open file %s\n", argv[1]);
 		return -1;
@@ -45,7 +49,7 @@ int main(int argc, char **argv)
 		return -1;
 	}
 
-	int fout = open(argv[2], O_WRONLY | O_CREAT | O_TRUNC, S_IRWXU );
+	int fout = open(argv[3], O_WRONLY | O_CREAT | O_TRUNC, S_IRWXU );
 	if( fout == -1 ) {
 		printf("cannot open outfile %s!\n", argv[2]);
 		sf_close(fh);
@@ -54,7 +58,7 @@ int main(int argc, char **argv)
 	
 	if (info.channels == 1) {
 		printf("decoding file\n");
-		decode_mono( fh, fout );
+		decode_mono( fh, fout, scramble );
 	} else  {
 		printf("BUMMER! mono only!\n");
 		sf_close(fh);
@@ -72,9 +76,9 @@ static uint8_t rx_buffer[kBlockSize];
 static uint16_t packet_index;
 static size_t current_address;
 
-void decode_mono( SNDFILE * fin, int fout )
+void decode_mono( SNDFILE * fin, int fout, int scramble )
 {
-	decoder.Init( 40000 );
+	decoder.Init( 1000, scramble );
 	demodulator.Init( kModulationRate / kSampleRate * 4294967296.0, kSampleRate / kModulationRate, 2.0 * kSampleRate / kBitRate );
 	demodulator.SyncCarrier( true );
 	decoder.Reset(  );
